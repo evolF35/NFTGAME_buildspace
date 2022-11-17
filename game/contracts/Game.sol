@@ -14,6 +14,19 @@ import "./Libraries/Base64.sol";
 
 contract Game is ERC721 {
 
+    uint randNonce = 0; // this is used to help ensure that the algorithm has different inputs every time
+
+    function randomInt(uint _modulus) internal returns(uint){
+        randNonce++;
+        return( uint(keccak256(abi.encodePacked(block.timestamp,msg.sender,
+        randNonce)))% _modulus);
+    }
+
+    event CharachterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
+    event AttackComplete(address sender, uint newBossHp, uint newPlayerHp);
+    event Regened(address sender, uint newPlayerHp);
+
+
     struct CharacterAttributes {
         uint characterIndex;
         string name;
@@ -34,6 +47,7 @@ contract Game is ERC721 {
 
     Boss public BigBoss;
 
+    mapping (address => uint256) public lastRefuel;
 
     CharacterAttributes[] defaultCharacters;
 
@@ -109,6 +123,9 @@ contract Game is ERC721 {
         nftHolders[msg.sender] = newItemId;
 
         _tokenIds.increment();
+        emit CharachterNFTMinted(msg.sender,newItemId,_characterIndex);
+        lastRefuel[msg.sender] = block.timestamp;
+
 
     }
 
@@ -131,7 +148,6 @@ contract Game is ERC721 {
       charAttributes.imageURI,
       '", "attributes": [ { "trait_type": "Health Points", "value": ',strHp,', "max_value":',strMaxHp,'}, { "trait_type": "Attack Damage", "value": ',
       strAttackDamage,'}, {"trait_type": "RegenRate", "value": ',strRegenRate,'} ]}'
-
             )
         );
 
@@ -153,10 +169,87 @@ contract Game is ERC721 {
 
         console.log("Boss %s has %s HP and %s AD", BigBoss.name, BigBoss.hp, BigBoss.attackDamage);
 
+        require(
+            player.hp > 0,
+            "You are dead"
+        );
+
+        require(
+            BigBoss.hp > 0,
+            "big dawg is dead already"
+        );
+
+
+        if (BigBoss.hp < player.attackDamage){
+            BigBoss.hp = 0;
+        }
+        else{
+            BigBoss.hp = BigBoss.hp - player.attackDamage;
+        }
+
+        if (player.hp < BigBoss.attackDamage){
+            player.hp = 0;
+        }
+        else{
+            player.hp = player.hp - BigBoss.attackDamage;
+        }
+
+        console.log("Player attacked boss. New boss hp: %s", BigBoss.hp);
+        console.log("Boss attacked player. New player hp: %s\n", player.hp);
+
+        emit AttackComplete(msg.sender,BigBoss.hp,player.hp);
     }
 
 
+    function checkIfUserHasNFT() public view returns (CharacterAttributes memory){
+
+        uint256 userNFTtokenId = nftHolders[msg.sender];
+
+        if (userNFTtokenId > 0){
+            return (nftHolderAttributes[userNFTtokenId]);
+        }
+        else {
+            CharacterAttributes memory emptyStruct;
+            return (emptyStruct);
+        }
+    }
+
+    function getAllDefaultCharacters() public view returns (CharacterAttributes[] memory){
+        return( defaultCharacters);
+    }
+
+    function getBoss() public view returns (Boss memory){
+        return(BigBoss);
+    }
+
+
+    function refuel() public {
+
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+
+    require(
+            player.hp > 0,
+            "You are dead"
+    );
+    require(
+        player.hp < player.maxHp,
+        "you are full"
+    );
+
+        require(lastRefuel[msg.sender]+ 1 minutes < block.timestamp,"waIT");
+        lastRefuel[msg.sender] = block.timestamp;
+
+        if(player.hp + player.regenrate >= player.maxHp){
+            player.hp = player.maxHp;
+        }
+        else {
+            player.hp = player.hp + player.regenrate;
+        }
+
+        emit Regened(msg.sender,player.hp);
+
+    }
 
     
-
 }

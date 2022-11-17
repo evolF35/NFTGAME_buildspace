@@ -29,6 +29,9 @@ const main = async () => {
     attack = await gameContract.attackBoss();
     await attack.wait();
 
+    attack = await gameContract.attackBoss();
+    await attack.wait();
+
 };
 
 const runMain = async () => {

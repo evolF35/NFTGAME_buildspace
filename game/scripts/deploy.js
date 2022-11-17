@@ -1,6 +1,5 @@
 
 
-
 const main = async () => {
     const gameContractFactory = await hre.ethers.getContractFactory('Game');
     const gameContract = await gameContractFactory.deploy(
@@ -11,26 +10,27 @@ const main = async () => {
     [100, 200, 300],                    // HP values
     [100, 50, 25], //Attack
     [10,20,30]  //regen
+    , "Bad-Taste",
+    "https://i.imgur.com/FgQMl2N.png",
+    10000,
+    50
     );
     await gameContract.deployed();
 
     console.log("Contract deployed to:", gameContract.address);
 
     let txn;
-    txn = await gameContract.mintCharacterNFT(0);
+    txn = await gameContract.mintCharacterNFT(2);
     await txn.wait();
-    console.log("Minted NFT #1");
 
-
-    let returnedTokenURI = await gameContract.tokenURI(0);
+    let returnedTokenURI = await gameContract.tokenURI(1);
     console.log("Token URI:", returnedTokenURI);
 
-    txn = await gameContract.mintCharacterNFT(1);
-    await txn.wait();
-    console.log("Minted NFT #2");
+    attack = await gameContract.attackBoss();
+    await attack.wait();
 
-
-    console.log("Done deploying and minting!");
+    attack = await gameContract.attackBoss();
+    await attack.wait();
 
 };
 
