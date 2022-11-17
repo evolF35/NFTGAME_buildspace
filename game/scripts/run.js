@@ -10,6 +10,10 @@ const main = async () => {
     [100, 200, 300],                    // HP values
     [100, 50, 25], //Attack
     [10,20,30]  //regen
+    , "Bad-Taste",
+    "https://i.imgur.com/FgQMl2N.png",
+    10000,
+    50
     );
     await gameContract.deployed();
 
@@ -22,6 +26,8 @@ const main = async () => {
     let returnedTokenURI = await gameContract.tokenURI(1);
     console.log("Token URI:", returnedTokenURI);
 
+    attack = await gameContract.attackBoss();
+    await attack.wait();
 
 };
 

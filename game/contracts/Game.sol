@@ -24,6 +24,17 @@ contract Game is ERC721 {
         uint regenrate;
     }
 
+    struct Boss {
+        string name;
+        string imageURI;
+        uint hp;
+        uint maxHp;
+        uint attackDamage;
+    }
+
+    Boss public BigBoss;
+
+
     CharacterAttributes[] defaultCharacters;
 
     using Counters for Counters.Counter;
@@ -39,10 +50,25 @@ contract Game is ERC721 {
         string[] memory characterImageURIs,
         uint[] memory characterHp,
         uint[] memory characterAttackDmg,
-        uint[] memory characterRegenRate
+        uint[] memory characterRegenRate,
+        string memory bossName,
+        string memory bossImageURI,
+        uint bossHp,
+        uint bossAttackDamage
         ) 
         ERC721("Teradyne","COMP")
         {
+
+            BigBoss = Boss({
+                name: bossName,
+                imageURI: bossImageURI,
+                hp: bossHp,
+                maxHp: bossHp,
+                attackDamage: bossAttackDamage
+            });
+
+        console.log("Done initializing boss %s w/ HP %s, img %s", BigBoss.name, BigBoss.hp, BigBoss.imageURI);
+
 
         for(uint i = 0; i < characterNames.length; i += 1){
             defaultCharacters.push(CharacterAttributes({
@@ -114,6 +140,18 @@ contract Game is ERC721 {
     );
 
     return(output);
+
+    }
+
+
+    function attackBoss() public {
+
+        uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
+        CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
+        console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", player.name, player.hp, player.attackDamage);
+        console.log("\nPlayer w/ character %s about to attack. Has %s RG", player.name, player.regenrate);
+
+        console.log("Boss %s has %s HP and %s AD", BigBoss.name, BigBoss.hp, BigBoss.attackDamage);
 
     }
 
